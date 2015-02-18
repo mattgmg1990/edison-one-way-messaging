@@ -29,7 +29,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 var LCD = require('jsupm_i2clcd');
 var myLcd = new LCD.Jhd1313m1(0, 0x3E, 0x62);
-myLcd.write('Waiting for messages.');
+myLcd.write('Waiting...');
 
 app.post("/submit-message", function(req, res) {
     console.log(req.body.message);
@@ -42,9 +42,7 @@ app.post("/submit-message", function(req, res) {
 
     myLcd.clear();
     myLcd.write(req.body.message);
-    myLcd.setColor(r, g, b);
-    myLcd.autoScroll();
-    
+    myLcd.setColor(parseInt(r), parseInt(g), parseInt(b));
 
     res.send('Message Received!');
 });
