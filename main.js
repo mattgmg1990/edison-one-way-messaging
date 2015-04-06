@@ -9,6 +9,10 @@ var bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: false }));
 
 var LCD = require('jsupm_i2clcd');
+var grove = require('jsupm_grove');
+// Using pin 13
+var groveLed = new grove.GroveLed(13);
+groveLed.off();
 var myLcd = new LCD.Jhd1313m1(0, 0x3E, 0x62);
 myLcd.write('Waiting...');
 
@@ -23,6 +27,21 @@ app.post("/submit-message", function(req, res) {
 
     myLcd.clear();
     splitMessageAndShowParts(myLcd, req.body.message);
+
+    groveLed.on();
+    var isLedOn = true;
+    function toggleLight() {
+        if (isLedOn) {
+            groveLed.off();
+            isLedOn = false;
+        } else {
+            groveLed.on();
+            isLedOn = true;
+        }
+        setTimeout(toggleLight, 1000);
+    }
+
+    setTimeout(toggleLight, 1000);
 
     myLcd.setColor(parseInt(r), parseInt(g), parseInt(b));
 
