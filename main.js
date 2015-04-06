@@ -22,9 +22,39 @@ app.post("/submit-message", function(req, res) {
     var b = rgb[2];
 
     myLcd.clear();
-    myLcd.write(req.body.message);
+    splitMessageAndShowParts(myLcd, req.body.message);
+
     myLcd.setColor(parseInt(r), parseInt(g), parseInt(b));
 
     res.send('Message Received!');
 });
+
+function splitMessageAndShowParts(lcd, message) {
+    var parts = new Array();
+
+    // The LCD can display 32 columns at a time.
+    for(var i = 1; i <= Math.ceil((message.length / 32)); i++) {
+        parts.push(message.substring(32 * (i - 1), 32 * i));
+    }
+
+    var curPart = 0;
+    var displayPart = function() {
+        writePart(lcd, parts[curPart % parts.length]);
+        curPart++;
+        setTimeout(displayPart, 2000);
+    }
+
+    // Recursively loop through the message parts on repeat.
+    setTimeout(displayPart(), 2000);
+}
+
+function writePart(lcd, part) {
+    myLcd.clear();
+    myLcd.setCursor(0, 0);
+    myLcd.write(part.substring(0, 16));
+    myLcd.setCursor(1, 0);
+    if (part.length > 16) {
+        myLcd.write(part.substring(16));
+    }
+}
 app.listen(8080);
