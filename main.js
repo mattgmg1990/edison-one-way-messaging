@@ -13,8 +13,17 @@ var grove = require('jsupm_grove');
 // Using pin 13
 var groveLed = new grove.GroveLed(13);
 groveLed.off();
+var isLedOn = false;
+var blinkLight = false;
+setInterval(toggleLight, 1000);
+
+var groveButton = new grove.GroveButton(2);
+setInterval(checkButton, 100);
+
 var myLcd = new LCD.Jhd1313m1(0, 0x3E, 0x62);
 myLcd.write('Waiting...');
+
+var writingIntervalId = 0;
 
 app.post("/submit-message", function(req, res) {
     console.log(req.body.message);
@@ -28,9 +37,15 @@ app.post("/submit-message", function(req, res) {
     myLcd.clear();
     splitMessageAndShowParts(myLcd, req.body.message);
 
-    groveLed.on();
-    var isLedOn = true;
-    function toggleLight() {
+    blinkLight = true;
+
+    myLcd.setColor(parseInt(r), parseInt(g), parseInt(b));
+
+    res.send('Message Received!');
+});
+
+function toggleLight() {
+    if (blinkLight) {
         if (isLedOn) {
             groveLed.off();
             isLedOn = false;
@@ -38,15 +53,19 @@ app.post("/submit-message", function(req, res) {
             groveLed.on();
             isLedOn = true;
         }
-        setTimeout(toggleLight, 1000);
     }
+}
 
-    setTimeout(toggleLight, 1000);
-
-    myLcd.setColor(parseInt(r), parseInt(g), parseInt(b));
-
-    res.send('Message Received!');
-});
+function checkButton() {
+    var isOn = groveButton.value();
+    if (isOn) {
+        blinkLight = false;
+        groveLed.off();
+        isLedOn = false;
+        stopText();
+        myLcd.setColor(255, 255, 255);
+    }
+}
 
 function splitMessageAndShowParts(lcd, message) {
     var parts = new Array();
@@ -60,15 +79,20 @@ function splitMessageAndShowParts(lcd, message) {
     var displayPart = function() {
         writePart(lcd, parts[curPart % parts.length]);
         curPart++;
-        setTimeout(displayPart, 2000);
     }
 
     // Recursively loop through the message parts on repeat.
-    setTimeout(displayPart(), 2000);
+    writingIntervalId = setInterval(displayPart, 2000);
+}
+
+function stopText() {
+    clearInterval(writingIntervalId);
+    myLcd.clear();
+    myLcd.setCursor(0, 0);
+    myLcd.write('Waiting...');
 }
 
 function writePart(lcd, part) {
-    myLcd.clear();
     myLcd.setCursor(0, 0);
     myLcd.write(part.substring(0, 16));
     myLcd.setCursor(1, 0);
