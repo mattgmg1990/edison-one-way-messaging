@@ -25,6 +25,8 @@ myLcd.write('Waiting...');
 
 var writingIntervalId = 0;
 
+var messages = new Array();
+
 app.post("/submit-message", function(req, res) {
     console.log(req.body.message);
     console.log(req.body.color);
@@ -34,8 +36,10 @@ app.post("/submit-message", function(req, res) {
     var g = rgb[1];
     var b = rgb[2];
 
+    stopText();
     myLcd.clear();
     splitMessageAndShowParts(myLcd, req.body.message);
+    messages.push({message: req.body.message, read: false});
 
     blinkLight = true;
 
@@ -43,6 +47,15 @@ app.post("/submit-message", function(req, res) {
 
     res.send('Message Received!');
 });
+
+app.get("/history", function(req, res) {
+    var historyString = "<ul>";
+    for(i = 0; i < messages.length; i++) {
+        historyString += "<li>" + messages[i].message + " - " + messages[i].read + "</li>";
+    }
+    historyString += "</ul>";
+    res.send(historyString);
+})
 
 function toggleLight() {
     if (blinkLight) {
@@ -64,6 +77,7 @@ function checkButton() {
         isLedOn = false;
         stopText();
         myLcd.setColor(255, 255, 255);
+        messages[messages.length - 1].read = true;
     }
 }
 
@@ -93,11 +107,12 @@ function stopText() {
 }
 
 function writePart(lcd, part) {
-    myLcd.setCursor(0, 0);
-    myLcd.write(part.substring(0, 16));
-    myLcd.setCursor(1, 0);
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.write(part.substring(0, 16));
+    lcd.setCursor(1, 0);
     if (part.length > 16) {
-        myLcd.write(part.substring(16));
+        lcd.write(part.substring(16));
     }
 }
 app.listen(8080);
