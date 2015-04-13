@@ -10,8 +10,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 var LCD = require('jsupm_i2clcd');
 var grove = require('jsupm_grove');
-// Using pin 13
-var groveLed = new grove.GroveLed(13);
+// Using plug D3
+var groveLed = new grove.GroveLed(3);
 groveLed.off();
 var isLedOn = false;
 var blinkLight = false;
@@ -22,6 +22,7 @@ setInterval(checkButton, 100);
 
 var myLcd = new LCD.Jhd1313m1(0, 0x3E, 0x62);
 myLcd.write('Waiting...');
+myLcd.setColor(0, 0, 0);
 
 var writingIntervalId = 0;
 
@@ -76,7 +77,7 @@ function checkButton() {
         groveLed.off();
         isLedOn = false;
         stopText();
-        myLcd.setColor(255, 255, 255);
+        myLcd.setColor(0, 0, 0);
         messages[messages.length - 1].read = true;
     }
 }
@@ -115,4 +116,4 @@ function writePart(lcd, part) {
         lcd.write(part.substring(16));
     }
 }
-app.listen(8080);
+app.listen(8082, "0.0.0.0");
